@@ -18,7 +18,7 @@ ENV PYENV_ROOT=/opt/pyenv \
 
 # Install Python 3.6.8
 RUN /opt/pyenv/bin/pyenv install 3.6.8 \
-    && /opt/pyenv/versions/3.6.8/bin/python -m pip install --upgrade pip
+    && /opt/pyenv/versions/3.6.8/bin/python -m pip install --upgrade pip setuptools wheel
 
 # Runtime image
 FROM nvidia/cuda:10.0-cudnn7-runtime
