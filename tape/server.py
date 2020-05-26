@@ -5,12 +5,51 @@ from flask import (
     Flask,
     jsonify,
     request,
-    send_file
+    send_file,
+    render_template
 )
 import torch
 import gzip
 import os
+import numpy as np
+import pandas as pd
+import plotly.express as px
+from sklearn.decomposition import PCA
 
+def gen_df(df, input_data):
+    l = list(input_data.keys())
+    for a in l:
+        d = input_data[a].item()
+        append_df = pd.DataFrame(d)
+        df = df.append(append_df.transpose(), ignore_index=True)
+    return df
+
+def visualize_data():
+
+    input_filename = request.args.get("input_filename")
+    try: 
+        f = request.files[input_filename]
+        f.save(f.filename)
+
+        input_data = np.load(f.filename, allow_pickle=True)
+        os.system("rm {}".format(f.filename))
+        embed_df = gen_df(pd.DataFrame(), input_data)
+        pca = PCA(n_components=3)
+        principal_components = pca.fit_transform(embed_df)
+        principal_df = pd.DataFrame(data = principal_components
+                 , columns = ['pc1', 'pc2', 'pc3'])
+
+        fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3')
+        out_html_name = "visualization_{}.html".format(f.filename)
+        fig.write_html('templates/index.html')
+        return f.filename, 200
+    except Exception as e:
+        return {"error": "{}".format(e)}, 400
+
+
+def load_visualization():
+    return render_template("index.html")
+    
 
 def embed_data():
     """
@@ -108,4 +147,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(host="0.0.0.0", port=8443)
+    app.run(host="0.0.0.0", port=8443, debug=True)
