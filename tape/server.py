@@ -15,34 +15,60 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from sklearn.decomposition import PCA
+import json
 
-def gen_df(df, input_data):
-    l = list(input_data.keys())
+def gen_df(df, label_list, arrays, lookup_d):
+    l = list(arrays.keys())
+    labels = []
     for a in l:
-        d = input_data[a].item()
+        d = arrays[a].item()['avg']
         append_df = pd.DataFrame(d)
+        labels.append(lookup_d[a])
         df = df.append(append_df.transpose(), ignore_index=True)
-    return df
+    return df, labels
 
 def visualize_data():
 
     input_filename = request.args.get("input_filename")
+    targets_filename = request.args.get("targets_filename")
+    prediction_task = request.args.get("prediction")
+    n_components = request.args.get("n_components", 3)
+    labels = None
     try: 
         f = request.files[input_filename]
         f.save(f.filename)
 
-        input_data = np.load(f.filename, allow_pickle=True)
-        os.system("rm {}".format(f.filename))
-        embed_df = gen_df(pd.DataFrame(), input_data)
+        targets_file = request.files[targets_filename]
+        targets_file.save(targets_file.filename)
+        labels = json.load(open(targets_file.filename))
+
+        print("files recieved")
+        os.system("gzip -d {}".format(input_filename))
+        input_file = f.filename.replace(".gz", "")
+        input_data = np.load(input_file, allow_pickle=True)
+        os.system("rm {}".format(input_file))
+        print("generating dataframes")
+        embed_df, embed_labels = gen_df(pd.DataFrame(), [], input_data, labels)
+        print("generating PCA")
         pca = PCA(n_components=3)
         principal_components = pca.fit_transform(embed_df)
         principal_df = pd.DataFrame(data = principal_components
                  , columns = ['pc1', 'pc2', 'pc3'])
+        principal_df['target'] = embed_labels
+        print("generating plot")
+        if labels:
+            if prediction_task == "classification":
+                if n_components == 3:
+                    fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3', color='target', color_discrete_sequence=px.colors.qualitative.G10)
+                    fig.write_html('templates/index.html')
+                if n_components == 2:
+                    fig = px.scatter(principal_df, x='pc1', y='pc2', color='target', color_discrete_sequence=px.colors.qualitative.G10)
+                    fig.write_html('templates/index.html')
 
-        fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3')
-        out_html_name = "visualization_{}.html".format(f.filename)
-        fig.write_html('templates/index.html')
-        return f.filename, 200
+        else:
+            fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3')
+            fig.write_html('templates/index.html')
+        return "success", 200
     except Exception as e:
         return {"error": "{}".format(e)}, 400
 
@@ -141,7 +167,9 @@ def create_app():
 
     flask_app.add_url_rule(rule="/health/full", view_func=health_check, methods=["GET"])
     flask_app.add_url_rule(rule="/torch/gpu", view_func=get_torch_gpu_settings, methods=["GET"])
-    flask_app.add_url_rule(rule='/embed', view_func=embed_data, methods=['POST'])
+    flask_app.add_url_rule(rule='/embed_data', view_func=embed_data, methods=['POST'])
+    flask_app.add_url_rule(rule='/visualize_data', view_func=visualize_data, methods=['POST'])
+    flask_app.add_url_rule(rule='/show_visualization', view_func=load_visualization, methods=['GET'])
     return flask_app
 
 
