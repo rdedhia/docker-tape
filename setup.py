@@ -18,6 +18,9 @@ setup(
         'Flask==1.0.2',
         'torch',
         'torchvision',
-        'tape_proteins'
+        'tape_proteins',
+        'plotly',
+        'scikit-learn',
+        'pandas'
     ],
 )

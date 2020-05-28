@@ -28,10 +28,8 @@ def gen_df(df, label_list, arrays, lookup_d):
     return df, labels
 
 def visualize_data():
-
     input_filename = request.args.get("input_filename")
     targets_filename = request.args.get("targets_filename")
-    prediction_task = request.args.get("prediction")
     n_components = request.args.get("n_components", 3)
     labels = None
     try: 
@@ -57,17 +55,17 @@ def visualize_data():
         principal_df['target'] = embed_labels
         print("generating plot")
         if labels:
-            if prediction_task == "classification":
-                if n_components == 3:
-                    fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3', color='target', color_discrete_sequence=px.colors.qualitative.G10)
-                    fig.write_html('templates/index.html')
-                if n_components == 2:
-                    fig = px.scatter(principal_df, x='pc1', y='pc2', color='target', color_discrete_sequence=px.colors.qualitative.G10)
-                    fig.write_html('templates/index.html')
+            if n_components == 3:
+                fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3', color='target', color_discrete_sequence=px.colors.qualitative.G10)
+                fig.write_html('templates/index.html')
+            if n_components == 2:
+                fig = px.scatter(principal_df, x='pc1', y='pc2', color='target', color_discrete_sequence=px.colors.qualitative.G10)
+                fig.write_html('templates/index.html')
 
         else:
             fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3')
             fig.write_html('templates/index.html')
+
         return "success", 200
     except Exception as e:
         return {"error": "{}".format(e)}, 400
