@@ -15,12 +15,12 @@ setup(
 
     # Insert dependencies list here
     install_requires=[
-        'Flask==1.0.2',
+        'Flask==1.1.1',
         'torch',
         'torchvision',
         'tape_proteins',
-        'plotly',
-        'scikit-learn',
-        'pandas'
+        'plotly==4.5.1',
+        'scikit-learn==0.21.2',
+        'pandas==0.25.1'
     ],
 )
