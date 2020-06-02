@@ -129,6 +129,8 @@ def embed_data():
     #     return {"error": "{}".format(e)},400
 
 def download_npz(output_filename):
+    print(os.listdir())
+    print(output_filename)
     return render_template("success.html", output_filename=output_filename)
 
 
@@ -177,7 +179,7 @@ def create_app():
     flask_app.add_url_rule(rule='/generate_visualization', view_func=visualize_data, methods=['POST'])
     flask_app.add_url_rule(rule='/', view_func=upload)
     flask_app.add_url_rule(rule='/show_visualization', view_func=show_visualization)
-    flask_app.add_url_rule(rule='/<output_filename>/download', view_func=download_npz)
+    flask_app.add_url_rule(rule='/output_data/<output_filename>', view_func=download_npz)
     return flask_app
 
 
