@@ -6,7 +6,9 @@ from flask import (
     jsonify,
     request,
     send_file,
-    render_template
+    render_template,
+    redirect,
+    url_for
 )
 import torch
 import gzip
@@ -17,64 +19,68 @@ import plotly.express as px
 from sklearn.decomposition import PCA
 import json
 
-def gen_df(df, label_list, arrays, lookup_d):
-    l = list(arrays.keys())
-    labels = []
-    for a in l:
-        d = arrays[a].item()['avg']
-        append_df = pd.DataFrame(d)
-        labels.append(lookup_d[a])
-        df = df.append(append_df.transpose(), ignore_index=True)
-    return df, labels
+
+
+def gen_arr(arrays, lookup_d):
+    keys = arrays.files
+    output, labels = [], []
+    for key in keys:
+        d = arrays[key].item()['avg']
+        labels.append(lookup_d[key])
+        output.append(d)
+    return np.array(output), labels
+
+
+def upload():
+    return render_template("file_upload_form.html")
 
 def visualize_data():
-    input_filename = request.args.get("input_filename")
-    targets_filename = request.args.get("targets_filename")
-    n_components = request.args.get("n_components", 3)
-    labels = None
-    try: 
-        f = request.files[input_filename]
-        f.save(f.filename)
 
-        targets_file = request.files[targets_filename]
-        targets_file.save(targets_file.filename)
-        labels = json.load(open(targets_file.filename))
+    # load n_components
+    n_components = int(request.form.get("n_components"))
 
-        print("files recieved")
-        os.system("gzip -d {}".format(input_filename))
-        input_file = f.filename.replace(".gz", "")
-        input_data = np.load(input_file, allow_pickle=True)
-        os.system("rm {}".format(input_file))
-        print("generating dataframes")
-        embed_df, embed_labels = gen_df(pd.DataFrame(), [], input_data, labels)
-        print("generating PCA")
-        pca = PCA(n_components=3)
-        principal_components = pca.fit_transform(embed_df)
-        principal_df = pd.DataFrame(data = principal_components
-                 , columns = ['pc1', 'pc2', 'pc3'])
-        principal_df['target'] = embed_labels
-        print("generating plot")
-        if labels:
-            if n_components == 3:
-                fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3', color='target', color_discrete_sequence=px.colors.qualitative.G10)
-                fig.write_html('templates/index.html')
-            if n_components == 2:
-                fig = px.scatter(principal_df, x='pc1', y='pc2', color='target', color_discrete_sequence=px.colors.qualitative.G10)
-                fig.write_html('templates/index.html')
+    # load input data file and save to disk
+    f = request.files.get("input_data")
+    f.save(f.filename)
 
-        else:
-            fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3')
-            fig.write_html('templates/index.html')
+    # load targets file and save to disk
+    targets_file = request.files.get("targets")
+    targets_file.save(targets_file.filename)
 
-        return "success", 200
-    except Exception as e:
-        return {"error": "{}".format(e)}, 400
+    # create lookup dictionary for targets
+    lookup_d = json.load(open(targets_file.filename))
 
+    print("files recieved")
+    os.system("gzip -d {}".format(f.filename))
+    input_file = f.filename.replace(".gz", "")
+    input_data = np.load(input_file, allow_pickle=True)
 
-def load_visualization():
+    # cleanup saved files
+    os.system("rm {}".format(input_file))
+    os.system("rm {}".format(targets_file.filename))
+
+    print("generating dataframes")
+    embed_arr, embed_labels = gen_arr(input_data, lookup_d)
+    print("generating PCA")
+    pca = PCA(n_components=3)
+    principal_components = pca.fit_transform(embed_arr)
+    principal_df = pd.DataFrame(data = principal_components
+             , columns = ['pc1', 'pc2', 'pc3'])
+    principal_df['target'] = embed_labels
+    print("generating plot")
+    output_html = '{}.html'.format(input_file)
+    if n_components == 3:
+        fig = px.scatter_3d(principal_df, x='pc1', y='pc2', z='pc3', color='target', color_discrete_sequence=px.colors.qualitative.G10)
+    if n_components == 2:
+        fig = px.scatter(principal_df, x='pc1', y='pc2', color='target', color_discrete_sequence=px.colors.qualitative.G10)
+
+    fig.write_html("templates/index.html")
+
+    return redirect(url_for('show_visualization'))
+
+def show_visualization():
     return render_template("index.html")
     
-
 def embed_data():
     """
     Return embedded data based on chosen model
@@ -92,36 +98,38 @@ def embed_data():
     """
 
     # initialize input parameters
-    model = request.args.get("model", "transformer")
-    tokenizer = request.args.get("tokenizer", "iupac")
-    batch_size = request.args.get("batch_size", "64")
-    pretrained_model = request.args.get("pretrained_model", "bert-base")
+    model = request.form.get("model", "transformer")
+    tokenizer = request.form.get("tokenizer", "iupac")
+    batch_size = int(request.form.get("batch_size", "64"))
+    pretrained_model = request.form.get("pretrained_model", "bert-base")
+    output_filename = request.form.get("output_filename")
 
-    input_filename = request.args.get("input_filename")
-    output_filename = request.args.get("output_filename")
-
-    try:
+    # try:
         # load file from request
-        f = request.files[input_filename]
-        f.save(f.filename)
+    f = request.files.get("input_filename")
+    f.save(f.filename)
 
-        # decompress file
-        os.system("gzip -d {}".format(f.filename))
+    # decompress file
+    os.system("gzip -d {}".format(f.filename))
 
-        # fix filenames
-        input_file = f.filename.replace(".gz", "")
-        output_file = output_filename + ".npz"
+    # fix filenames
+    input_file = f.filename.replace(".gz", "")
+    output_file = output_filename + ".npz"
 
-        # embed data
-        os.system("tape-embed {} {} {} {} --batch_size {} --tokenizer {}".format(
-            model, input_file, output_filename, pretrained_model, batch_size, tokenizer))
+    # embed data
+    os.system("tape-embed {} {} {} {} --batch_size {} --tokenizer {}".format(
+        model, input_file, output_filename, pretrained_model, batch_size, tokenizer))
 
-        # remove input file
-        os.system("rm {}".format(input_file))
+    # remove input file and move output file into output directory
+    os.system("rm {}".format(input_file))
+    os.system("mv {} output_data".format(output_file))
 
-        return send_file(output_file, attachment_filename=output_file), 200
-    except Exception as e:
-        return {"error": "{}".format(e)},400
+    return redirect(url_for('download_npz', output_filename=output_file))
+    # except Exception as e:
+    #     return {"error": "{}".format(e)},400
+
+def download_npz(output_filename):
+    return render_template("success.html", output_filename=output_filename)
 
 
 def health_check():
@@ -159,15 +167,17 @@ def create_app():
     """
     Main function to create the Flask app
     """
-    flask_app = Flask(__name__)
-    flask_app.config['UPLOAD_FOLDER'] = "/tape/data/"
+    flask_app = Flask(__name__, template_folder='templates')
+    flask_app.config['UPLOAD_FOLDER'] = "/tape/output_data/"
 
 
     flask_app.add_url_rule(rule="/health/full", view_func=health_check, methods=["GET"])
     flask_app.add_url_rule(rule="/torch/gpu", view_func=get_torch_gpu_settings, methods=["GET"])
     flask_app.add_url_rule(rule='/embed_data', view_func=embed_data, methods=['POST'])
-    flask_app.add_url_rule(rule='/visualize_data', view_func=visualize_data, methods=['POST'])
-    flask_app.add_url_rule(rule='/show_visualization', view_func=load_visualization, methods=['GET'])
+    flask_app.add_url_rule(rule='/generate_visualization', view_func=visualize_data, methods=['POST'])
+    flask_app.add_url_rule(rule='/', view_func=upload)
+    flask_app.add_url_rule(rule='/show_visualization', view_func=show_visualization)
+    flask_app.add_url_rule(rule='/<output_filename>/download', view_func=download_npz)
     return flask_app
 
 
