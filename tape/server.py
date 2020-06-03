@@ -82,7 +82,7 @@ def visualize_data():
     print("generating plot")
 
     # Adjust PCA according to the number of components
-    if n_components == 2:
+    if n_components == 3:
         fig = px.scatter_3d(
             principal_df,
             x="pc1",
@@ -91,7 +91,7 @@ def visualize_data():
             color="target",
             color_discrete_sequence=px.colors.qualitative.G10,
         )
-    if n_components == 3:
+    if n_components == 2:
         fig = px.scatter(
             principal_df,
             x="pc1",
