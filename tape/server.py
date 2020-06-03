@@ -154,6 +154,9 @@ def embed_data():
     shutil.move(output_file, Path("output_data") / output_file)
 
     output_data_path = Path(current_app.root_path) / "../output_data"
+    print(output_data_path)
+    print(output_file)
+    print(os.path.isfile(output_data_path/output_file))
     return send_from_directory(directory=output_data_path, filename=output_file)
 
 
