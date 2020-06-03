@@ -4,23 +4,22 @@ from setuptools import setup
 
 setup(
     # Package information
-    name='docker-tape',
-    version='0.0.1',
-    maintainer='Rahil Dedhia, Arjun Dharma, Thomas Waldschmidt',
-    url='github.com/rdedhia/docker-tape',
-
+    name="docker-tape",
+    version="0.0.1",
+    maintainer="Rahil Dedhia, Arjun Dharma, Thomas Waldschmidt",
+    url="github.com/rdedhia/docker-tape",
     # Package data
     packages=find_packages(),
     include_package_data=True,
-
     # Insert dependencies list here
     install_requires=[
-        'Flask==1.1.1',
-        'torch',
-        'torchvision',
-        'tape_proteins',
-        'plotly==4.5.1',
-        'scikit-learn==0.21.2',
-        'pandas==0.25.1'
+        "Flask==1.1.1",
+        "torch",
+        "torchvision",
+        "tape_proteins",
+        "plotly==4.5.1",
+        "scikit-learn==0.21.2",
+        "requests",
+        "pandas==0.25.1",
     ],
 )

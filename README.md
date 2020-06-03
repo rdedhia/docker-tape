@@ -12,20 +12,20 @@ To run the container, run `make run-cpu` or `make run-gpu` depending on which de
 CPU:
 
 ```
-docker run -p 8443:8443 tape
+docker run -p 443:8443 tape
 ```
 
 GPU:
 
 ```
-docker run --runtime=nvidia -p 8443:8443 tape
+docker run --runtime=nvidia -p 443:8443 tape
 ```
 
 Test the running application with `CURL`. There is a `torch/gpu` route which specifies information about the GPU. To
 test, run `make test` or use:
 
 ```
-curl http://0.0.0.0:8443/torch/gpu
+curl http://0.0.0.0:443/torch/gpu
 ```
 
 The response on a CPU:
