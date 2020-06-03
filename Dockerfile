@@ -38,6 +38,6 @@ COPY tape ./tape
 # Install dependencies
 RUN /opt/pyenv/versions/3.6.8/bin/python -m pip install --no-cache-dir -e .
 
-WORKDIR /tape/
+WORKDIR /
 
-CMD ["/opt/pyenv/versions/3.6.8/bin/python", "server.py"]
+CMD ["/opt/pyenv/versions/3.6.8/bin/python", "tape/server.py"]

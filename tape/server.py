@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 import os
 
-from flask import Flask, current_app, jsonify, request, render_template, redirect, send_from_directory, url_for
+from flask import Flask, current_app, jsonify, request, render_template, redirect, send_file, url_for
 import torch
 import numpy as np
 import pandas as pd
@@ -66,8 +66,8 @@ def visualize_data():
     input_data = np.load(input_file, allow_pickle=True)
 
     # cleanup saved files
-    # os.system("rm {}".format(input_file))
-    # os.system("rm {}".format(targets_file.filename))
+    os.system("rm {}".format(input_file))
+    os.system("rm {}".format(targets_file.filename))
 
     print("generating dataframes")
     embed_arr, embed_labels = gen_arr(input_data, lookup_d)
@@ -98,7 +98,7 @@ def visualize_data():
             color="target",
             color_discrete_sequence=px.colors.qualitative.G10,
         )
-    fig.write_html("templates/index.html")
+    fig.write_html("tape/templates/index.html")
 
     return redirect(url_for("show_visualization"))
 
@@ -147,17 +147,27 @@ def embed_data():
     )
 
     # remove input file
-    # os.system("rm {}".format(input_file))
+    os.system("rm {}".format(input_file))
 
     # create output directory if it doesn't exist, and move output file into output directory
     os.makedirs("output_data", exist_ok=True)
     shutil.move(output_file, Path("output_data") / output_file)
 
-    output_data_path = Path(current_app.root_path) / "../output_data"
+    return redirect(url_for("download_npz", output_filename=output_file))
+
+
+def download_npz(output_filename):
+    """
+    Download npz file of embedded protein sequences from the server
+
+    Args:
+        output_filename (str): Name of npz file to download
+    """
+    output_data_path = Path(current_app.root_path) / "../output_data/" / output_filename
     print(output_data_path)
-    print(output_file)
-    print(os.path.isfile(output_data_path/output_file))
-    return send_from_directory(directory=output_data_path, filename=output_file)
+    print(output_filename)
+    print(os.path.isfile(output_data_path))
+    return send_file(output_data_path)
 
 
 def health_check():
@@ -208,7 +218,9 @@ def create_app():
     )
     flask_app.add_url_rule(rule="/", view_func=upload)
     flask_app.add_url_rule(rule="/show_visualization", view_func=show_visualization)
-
+    flask_app.add_url_rule(
+        rule="/output_data/<output_filename>", view_func=download_npz
+    )
     return flask_app
 
 
