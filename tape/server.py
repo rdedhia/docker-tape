@@ -2,6 +2,8 @@
 Main entrypoint for the Flask webserver.
 """
 import json
+from pathlib import Path
+import shutil
 import os
 
 from flask import Flask, jsonify, request, render_template, redirect, url_for
@@ -19,7 +21,7 @@ def gen_arr(embeddings, seq_id_to_label):
     sequence, as will a list of the labels by looking up the sequence IDs in seq_id_to_label
 
     Args:
-        embeddings: Nested numpy array containing embeddings for each sequence ID
+        embeddings (numpy.lib.npyio.NpzFile): Nested numpy array containing embeddings for each sequence ID
         seq_id_to_label (dict[str,str]): Map from sequence ID to classification label
 
     Returns:
@@ -152,8 +154,8 @@ def embed_data():
     os.system("rm {}".format(input_file))
 
     # create output directory if it doesn't exist, and move output file into output directory
-    os.system("mkdir -p output_data")
-    os.system("mv {} output_data".format(output_file))
+    os.makedirs("output_data", exist_ok=True)
+    shutil.move(output_file, Path("output_data") / output_file)
 
     return redirect(url_for("download_npz", output_filename=output_file))
 
@@ -165,6 +167,7 @@ def download_npz(output_filename):
     Args:
         output_filename (str): Name of npz file to download
     """
+    print(output_filename)
     return render_template("success.html", output_filename=output_filename)
 
 
