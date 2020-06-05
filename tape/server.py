@@ -25,7 +25,8 @@ def gen_arr(embeddings, seq_id_to_label):
         seq_id_to_label (dict[str,str]): Map from sequence ID to classification label
 
     Returns:
-
+        output (np.array): Average embeddings for each sequence
+        labels (list[str])
     """
     keys = embeddings.files
     output, labels = [], []

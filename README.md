@@ -98,3 +98,14 @@ The response on a `p3.8xlarge` instance with 4 `Tesla V100` GPUs:
     "device_name":"Tesla V100-SXM2-16GB"
 }
 ```
+
+## Embedding Sequences
+
+Slow for large datasets, especially if using CPU. Can use the test file in `tests/test-files/deeploc_small.fasta` for
+a quick test.
+
+## PCA Visualization
+
+Can use data files from our [fork](https://github.com/rdedhia/tape) of TAPE. The data files are located in the `data`
+directory of the project, and are described in detail
+in [Notebooks.md](https://github.com/rdedhia/tape/blob/master/Notebooks.md).
