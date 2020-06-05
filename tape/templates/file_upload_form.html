@@ -8,7 +8,7 @@
  		<label for="n_components">Number of PCA Components (2 or 3):</label>
         <input type="text" name="n_components" id="n_components" value="3"/>
         <br>
- 		<label for="input_data">Input Data (gzipped npz file):</label>
+ 		<label for="input_data">Input Data (npz file):</label>
         <input type="file" name="input_data" />  
         <br>
         <label for="targets">Targets File (JSON):</label>
@@ -24,7 +24,7 @@
 <h1>Embed Fasta File with pretrained models (default Transformer)</h1>
 
  <form action = "/embed_data" method = "post" enctype="multipart/form-data">  
- 		<label for="input_data">Input Data (gzipped fasta file):</label>
+ 		<label for="input_data">Input Data (fasta file):</label>
         <input type="file" name="input_filename" /> 
         <br>
 		<label for="targets">Model (transformer, unirep, tr-rosetta) :</label>
