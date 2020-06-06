@@ -129,7 +129,7 @@ def embed_data():
     # initialize input parameters
     model = request.form.get("model", "transformer")
     tokenizer = request.form.get("tokenizer", "iupac")
-    batch_size = int(request.form.get("batch_size", "64"))
+    batch_size = int(request.form.get("batch_size", "4"))
     pretrained_model = request.form.get("pretrained_model", "bert-base")
     output_filename = request.form.get("output_filename")
 
