@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     # Insert dependencies list here
     install_requires=[
-        "Flask==1.1.1",
+        "Flask==2.3.2",
         "torch==1.5.0",
         "torchvision==0.6.0",
         "tape_proteins==0.4",
