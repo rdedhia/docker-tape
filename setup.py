@@ -19,7 +19,7 @@ setup(
         "tape_proteins==0.4",
         "plotly==4.5.1",
         "scikit-learn==0.21.2",
-        "requests==2.23.0",
+        "requests==2.31.0",
         "pandas==0.25.1",
     ],
 )
